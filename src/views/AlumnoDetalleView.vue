@@ -1,6 +1,32 @@
 <template>
   <div class="alumno-detalle-view" v-if="alumno">
     <h1>Detalle del Alumno: {{ alumno.nombre_completo }}</h1>
+    <p><strong>Matrícula:</strong> {{ alumno.matricula }}</p>
+    <p><strong>Carrera:</strong> {{ alumno.carrera }}</p>
+    <p><strong>Beca:</strong> {{ alumno.porcentaje_beca }}%</p>
+
+    <hr />
+
+    <div class="card">
+      <h3>Crear Nuevo Cargo</h3>
+      <form @submit.prevent="crearNuevoCargo" class="form-grid">
+        <div class="form-group">
+          <label for="concepto">Concepto a cobrar:</label>
+          <select id="concepto" v-model="nuevoCargo.concepto_id" required>
+            <option disabled value="">Selecciona un concepto</option>
+            <option v-for="c in todosLosConceptos" :key="c.id" :value="c.id">
+              {{ c.nombre_concepto }}
+            </option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="fecha-vencimiento">Fecha de Vencimiento:</label>
+          <input id="fecha-vencimiento" type="date" v-model="nuevoCargo.fecha_vencimiento" />
+        </div>
+        <button type="submit">Generar Cargo</button>
+      </form>
+    </div>
+
     <hr />
 
     <div class="card">
@@ -22,21 +48,42 @@
           <label>Forma de Pago:</label>
           <input v-model="nuevoRecibo.forma_pago" placeholder="Efectivo, Transferencia..." />
         </div>
-
-        <h4>Aplicar pago a los siguientes cargos:</h4>
+        <h4 class="full-width">Aplicar pago a los siguientes cargos:</h4>
         <div v-for="cargo in cargosPendientes" :key="cargo.id" class="cargo-a-pagar">
            <input type="checkbox" v-model="cargosSeleccionados" :value="cargo.id" />
            <label>
              {{ cargo.nombre_concepto }} - <strong>Saldo: ${{ cargo.saldo_pendiente }}</strong>
            </label>
         </div>
-
         <button type="submit" class="full-width">Registrar Pago</button>
       </form>
     </div>
+
     <hr />
+
     <h3>Cargos Asociados</h3>
-    </div>
+    <table v-if="cargos.length > 0">
+      <thead>
+        <tr>
+          <th>Concepto</th>
+          <th>Monto Original</th>
+          <th>Descuento</th>
+          <th>Saldo Pendiente</th>
+          <th>Estatus</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="cargo in cargos" :key="cargo.id" :class="{ 'pagado': cargo.saldo_pendiente <= 0 }">
+          <td>{{ cargo.nombre_concepto }}</td>
+          <td>${{ cargo.monto_original }}</td>
+          <td>${{ cargo.monto_descuento }}</td>
+          <td><strong>${{ cargo.saldo_pendiente }}</strong></td>
+          <td>{{ cargo.saldo_pendiente <= 0 ? 'Pagado' : cargo.estatus }}</td>
+        </tr>
+      </tbody>
+    </table>
+    <p v-else>Este alumno no tiene cargos registrados.</p>
+  </div>
 </template>
 
 <script setup>
@@ -49,68 +96,93 @@ const alumno = ref(null);
 const cargos = ref([]);
 const todosLosConceptos = ref([]);
 
-const nuevoCargo = ref({ /* ... se mantiene igual ... */ });
+const nuevoCargo = ref({
+  concepto_id: '',
+  fecha_vencimiento: '',
+});
 
-// --- NUEVO: Modelo para el formulario de recibo ---
 const nuevoRecibo = ref({
   folio: '',
   alumno_id: null,
   monto_total_recibido: 0,
-  fecha_pago: new Date().toISOString().split('T')[0], // Fecha de hoy por defecto
+  fecha_pago: new Date().toISOString().split('T')[0],
   forma_pago: 'Efectivo',
   detalles: [],
 });
-const cargosSeleccionados = ref([]); // Guardará los IDs de los cargos a pagar
+const cargosSeleccionados = ref([]);
 
-// Propiedad computada que filtra solo los cargos con saldo pendiente
 const cargosPendientes = computed(() => {
     return cargos.value.filter(c => parseFloat(c.saldo_pendiente) > 0);
 });
 
-const fetchAlumnoData = async () => { /* ... se mantiene igual ... */ };
-const fetchConceptos = async () => { /* ... se mantiene igual ... */ };
-const crearNuevoCargo = async () => { /* ... se mantiene igual ... */ };
+const fetchAlumnoData = async () => {
+  const alumnoId = route.params.id;
+  try {
+    const [alumnoRes, cargosRes] = await Promise.all([
+      apiClient.get(`/alumnos/${alumnoId}`),
+      apiClient.get(`/alumnos/${alumnoId}/cargos`),
+    ]);
+    alumno.value = alumnoRes.data;
+    cargos.value = cargosRes.data;
+  } catch (error) {
+    console.error('Error al cargar los datos del alumno:', error);
+  }
+};
 
-// --- NUEVA FUNCIÓN: Lógica para registrar el pago ---
+const fetchConceptos = async () => {
+    try {
+        const response = await apiClient.get('/conceptos');
+        todosLosConceptos.value = response.data;
+    } catch (error) {
+        console.error('Error al obtener los conceptos:', error);
+    }
+};
+
+const crearNuevoCargo = async () => {
+  const alumnoId = route.params.id;
+  try {
+    await apiClient.post(`/alumnos/${alumnoId}/cargos`, {
+        ...nuevoCargo.value,
+        alumno_id: alumnoId
+    });
+    await fetchAlumnoData();
+    nuevoCargo.value.concepto_id = '';
+    nuevoCargo.value.fecha_vencimiento = '';
+  } catch (error) {
+    console.error('Error al crear el cargo:', error.response?.data);
+    alert(`Error: ${error.response?.data?.error || 'Error desconocido'}`);
+  }
+};
+
 const registrarPago = async () => {
   nuevoRecibo.value.alumno_id = alumno.value.id;
-
   let montoRestante = nuevoRecibo.value.monto_total_recibido;
   const detalles = [];
 
-  // Recorremos los cargos seleccionados para aplicar el pago
   for (const cargoId of cargosSeleccionados.value) {
     if (montoRestante <= 0) break;
-
     const cargo = cargos.value.find(c => c.id === cargoId);
     if (cargo) {
         const saldo = parseFloat(cargo.saldo_pendiente);
         const montoAAplicar = Math.min(montoRestante, saldo);
-
-        detalles.push({
-            cargo_id: cargoId,
-            monto_aplicado: montoAAplicar,
-        });
+        detalles.push({ cargo_id: cargoId, monto_aplicado: montoAAplicar });
         montoRestante -= montoAAplicar;
     }
   }
-
+  
   if (detalles.length === 0) {
     alert("Por favor, selecciona al menos un cargo para aplicar el pago.");
     return;
   }
-
   nuevoRecibo.value.detalles = detalles;
 
   try {
     await apiClient.post('/recibos', nuevoRecibo.value);
     alert('¡Pago registrado exitosamente!');
-    await fetchAlumnoData(); // Recargamos todo para ver el saldo actualizado
-    // Limpiar formulario de recibo
+    await fetchAlumnoData();
     nuevoRecibo.value.folio = '';
     nuevoRecibo.value.monto_total_recibido = 0;
     cargosSeleccionados.value = [];
-
   } catch (error) {
     console.error("Error al registrar el pago:", error.response?.data);
     alert(`Error: ${error.response?.data?.error || 'Error desconocido'}`);
@@ -124,8 +196,16 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* ... (los estilos anteriores se mantienen) ... */
+.alumno-detalle-view { max-width: 900px; margin: 0 auto; }
+.card { background-color: #f9f9f9; border-radius: 8px; padding: 1.5rem; margin-bottom: 2rem; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr auto; gap: 1rem; align-items: end; }
 .form-grid-pago { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.form-group { display: flex; flex-direction: column; }
 .cargo-a-pagar { grid-column: 1 / -1; display: flex; align-items: center; gap: 0.5rem; }
 .full-width { grid-column: 1 / -1; }
+table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+th, td { border: 1px solid #ddd; padding: 8px; }
+th { background-color: #f2f2f2; }
+tr.pagado td { background-color: #e6ffed; color: #2d6a4f; }
+hr { margin: 2rem 0; }
 </style>

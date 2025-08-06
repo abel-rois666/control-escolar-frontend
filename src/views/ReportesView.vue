@@ -1,0 +1,1 @@
+<template><h1>Módulo de Reportes</h1></template>
