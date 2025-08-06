@@ -42,22 +42,27 @@ import apiClient from '../services/api.js';
 import { Pie } from 'vue-chartjs';
 import { Chart as ChartJS, Title, Tooltip, Legend, ArcElement, CategoryScale } from 'chart.js';
 
-// Es necesario registrar los componentes de Chart.js
 ChartJS.register(Title, Tooltip, Legend, ArcElement, CategoryScale);
 
 const ingresosDiarios = ref([]);
 
-// Propiedad computada para calcular el total
+// --- CORRECCIÓN AQUÍ ---
+// La variable se declara aquí para ser accesible en el template
+const fechaDeHoy = new Date().toLocaleDateString('es-ES', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+});
+
 const totalIngresosDiarios = computed(() => {
   return ingresosDiarios.value.reduce((sum, ingreso) => sum + parseFloat(ingreso.total), 0);
 });
 
-// Propiedad computada para darle formato a los datos para la gráfica
 const chartData = computed(() => ({
   labels: ingresosDiarios.value.map(i => i.forma_pago),
   datasets: [
     {
-      backgroundColor: ['#41B883', '#E46651', '#00D8FF'], // Puedes añadir más colores
+      backgroundColor: ['#41B883', '#E46651', '#00D8FF'],
       data: ingresosDiarios.value.map(i => parseFloat(i.total)),
     },
   ],
@@ -72,11 +77,6 @@ onMounted(async () => {
   try {
     const response = await apiClient.get('/reportes/ingresos-diarios');
     ingresosDiarios.value = response.data;
-    const fechaDeHoy = new Date().toLocaleDateString('es-ES', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-});
   } catch (error) {
     console.error('Error al obtener los ingresos diarios:', error);
   }
@@ -90,12 +90,12 @@ onMounted(async () => {
 
 .report-container {
   display: grid;
-  grid-template-columns: 2fr 1fr; /* Le damos más espacio a la tabla */
+  grid-template-columns: 2fr 1fr;
   gap: 2rem;
-  background-color: #FFFFFF; /* Fondo blanco */
+  background-color: #FFFFFF;
   padding: 2rem;
   border-radius: 8px;
-  border: 1px solid #DFE0EB; /* Borde suave */
+  border: 1px solid #DFE0EB;
 }
 
 .report-header {
