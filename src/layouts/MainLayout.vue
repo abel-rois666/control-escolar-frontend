@@ -2,7 +2,8 @@
   <div class="app-container">
     <aside class="sidebar">
       <div class="sidebar-header">
-        <h2>Control Escolar</h2>
+        <img :src="logo" alt="Logo CUOM" class="logo" />
+        <h2>Control Escolar y de Cobranza CUOM</h2>
       </div>
       <nav class="main-nav">
         <RouterLink to="/dashboard">Panel de Control</RouterLink>
@@ -22,56 +23,37 @@
 
 <script setup>
 import { RouterLink, RouterView } from 'vue-router';
+// Importamos la imagen del logo
+import logo from '@/assets/05-Logo_CUOM_v3_ConFondoBlanco.png';
 </script>
 
 <style scoped>
-.app-container {
-  display: flex;
-  min-height: 100vh;
-}
+.app-container { display: flex; min-height: 100vh; }
 .sidebar {
   width: 260px;
-  background-color: #363740; /* <-- Color oscuro del diseño */
-  color: #A4A6B3; /* <-- Color de texto grisáceo */
+  background-color: #192A4E; /* <-- 3. Color cambiado a azul oscuro */
+  color: #A4A6B3;
   display: flex;
   flex-direction: column;
 }
 .sidebar-header {
   padding: 1.5rem;
   text-align: center;
-  font-weight: bold;
-  border-bottom: 1px solid #4a4a4a;
+  border-bottom: 1px solid #2d3e5e;
 }
-.main-nav {
-  display: flex;
-  flex-direction: column;
-  flex-grow: 1;
-  padding-top: 1rem;
+.logo {
+    max-width: 80px; /* Ajusta el tamaño según necesites */
+    margin-bottom: 1rem;
 }
-.main-nav a {
-  color: #A4A6B3;
-  text-decoration: none;
-  padding: 18px 24px;
-  border-left: 3px solid transparent;
-  transition: all 0.2s;
+.sidebar-header h2 {
+    font-size: 1rem;
+    font-weight: bold;
+    color: #fff;
 }
-.main-nav a:hover {
-  background-color: rgba(159, 162, 180, 0.08);
-  color: #DDE2FF;
-}
-.main-nav a.router-link-exact-active {
-  background-color: rgba(159, 162, 180, 0.08);
-  color: #DDE2FF;
-  border-left-color: #DDE2FF;
-}
-.nav-divider {
-  padding: 18px 24px;
-  font-size: 0.8rem;
-  text-transform: uppercase;
-  color: #5e606b;
-}
-.main-content {
-  flex-grow: 1;
-  padding: 2rem;
-}
+.main-nav { display: flex; flex-direction: column; flex-grow: 1; padding-top: 1rem; }
+.main-nav a { color: #A4A6B3; text-decoration: none; padding: 18px 24px; border-left: 3px solid transparent; transition: all 0.2s; }
+.main-nav a:hover { background-color: #2d3e5e; }
+.main-nav a.router-link-exact-active { background-color: rgba(159, 162, 180, 0.08); color: #DDE2FF; border-left-color: #DDE2FF; }
+.nav-divider { padding: 18px 24px; font-size: 0.8rem; text-transform: uppercase; color: #5e606b; }
+.main-content { flex-grow: 1; padding: 2rem; background-color: #F7F8FC; }
 </style>

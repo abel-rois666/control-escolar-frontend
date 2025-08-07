@@ -12,6 +12,8 @@
       />
     </div>
 
+     <SpinnerLoader v-if="cargando" />
+
     <div v-if="cargando" class="loading-message">
       Buscando...
     </div>
@@ -33,8 +35,11 @@
 <script setup>
 import { ref, watch } from 'vue';
 import { RouterLink } from 'vue-router';
+import { useToast } from 'vue-toastification'; 
 import apiClient from '../services/api.js';
+import SpinnerLoader from '../components/SpinnerLoader.vue';
 
+const toast = useToast();
 const terminoBusqueda = ref('');
 const resultados = ref([]);
 const cargando = ref(false);
@@ -58,6 +63,7 @@ watch(terminoBusqueda, async (nuevoValor) => {
     resultados.value = response.data;
   } catch (error) {
     console.error('Error al buscar alumnos:', error);
+    toast.error("Ocurrió un error al realizar la búsqueda."); 
     resultados.value = [];
   } finally {
     cargando.value = false;

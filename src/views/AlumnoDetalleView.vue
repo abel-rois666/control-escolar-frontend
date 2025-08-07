@@ -1,6 +1,17 @@
 <template>
-  <div class="alumno-detalle-view" v-if="alumno">
-    <h1>Detalle del Alumno: {{ alumno.nombre_completo }}</h1>
+  <SpinnerLoader v-if="cargando" />
+
+  <div class="alumno-detalle-view" v-if="!cargando && alumno">
+
+    <div class="header-detalle">
+      <div>
+        <h1>Detalle del Alumno</h1>
+        <h2>{{ alumno.nombre_completo }}</h2>
+      </div>
+      <RouterLink :to="`/alumnos/${alumno.id}/estado-de-cuenta`" class="btn-primary">
+        Generar Estado de Cuenta
+      </RouterLink>
+    </div>
     <p><strong>Matrícula:</strong> {{ alumno.matricula }}</p>
     <p><strong>Carrera:</strong> {{ alumno.carrera }}</p>
     <p><strong>Beca:</strong> {{ alumno.porcentaje_beca }}%</p>
@@ -89,12 +100,16 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import { useRoute } from 'vue-router';
+import { useToast } from "vue-toastification";
 import apiClient from '../services/api.js';
+import SpinnerLoader from '../components/SpinnerLoader.vue'; // <-- Importamos el spinner
 
+const toast = useToast();
 const route = useRoute();
 const alumno = ref(null);
 const cargos = ref([]);
 const todosLosConceptos = ref([]);
+const cargando = ref(true); // <-- Variable para controlar el spinner
 
 const nuevoCargo = ref({
   concepto_id: '',
@@ -125,6 +140,7 @@ const fetchAlumnoData = async () => {
     alumno.value = alumnoRes.data;
     cargos.value = cargosRes.data;
   } catch (error) {
+    toast.error("No se pudieron cargar los datos del alumno.");
     console.error('Error al cargar los datos del alumno:', error);
   }
 };
@@ -133,7 +149,8 @@ const fetchConceptos = async () => {
     try {
         const response = await apiClient.get('/conceptos');
         todosLosConceptos.value = response.data;
-    } catch (error) {
+    } catch (error)
+        {
         console.error('Error al obtener los conceptos:', error);
     }
 };
@@ -146,11 +163,13 @@ const crearNuevoCargo = async () => {
         alumno_id: alumnoId
     });
     await fetchAlumnoData();
+    toast.success("Cargo generado exitosamente.");
     nuevoCargo.value.concepto_id = '';
     nuevoCargo.value.fecha_vencimiento = '';
   } catch (error) {
+    const errorMessage = error.response?.data?.error || 'Error desconocido';
+    toast.error(`Error al crear el cargo: ${errorMessage}`);
     console.error('Error al crear el cargo:', error.response?.data);
-    alert(`Error: ${error.response?.data?.error || 'Error desconocido'}`);
   }
 };
 
@@ -171,27 +190,34 @@ const registrarPago = async () => {
   }
   
   if (detalles.length === 0) {
-    alert("Por favor, selecciona al menos un cargo para aplicar el pago.");
+    toast.warning("Por favor, selecciona al menos un cargo para aplicar el pago.");
     return;
   }
   nuevoRecibo.value.detalles = detalles;
 
   try {
     await apiClient.post('/recibos', nuevoRecibo.value);
-    alert('¡Pago registrado exitosamente!');
+    toast.success('¡Pago registrado exitosamente!');
     await fetchAlumnoData();
     nuevoRecibo.value.folio = '';
     nuevoRecibo.value.monto_total_recibido = 0;
     cargosSeleccionados.value = [];
   } catch (error) {
+    const errorMessage = error.response?.data?.error || 'Error desconocido';
+    toast.error(`Error al registrar el pago: ${errorMessage}`);
     console.error("Error al registrar el pago:", error.response?.data);
-    alert(`Error: ${error.response?.data?.error || 'Error desconocido'}`);
   }
 };
 
-onMounted(() => {
-  fetchAlumnoData();
-  fetchConceptos();
+onMounted(async () => {
+  cargando.value = true; // <-- Inicia la carga
+  try {
+    await Promise.all([fetchAlumnoData(), fetchConceptos()]);
+  } catch (error) {
+    toast.error("Error al inicializar la página.");
+  } finally {
+    cargando.value = false; // <-- Termina la carga
+  }
 });
 </script>
 
@@ -208,4 +234,22 @@ th, td { border: 1px solid #ddd; padding: 8px; }
 th { background-color: #f2f2f2; }
 tr.pagado td { background-color: #e6ffed; color: #2d6a4f; }
 hr { margin: 2rem 0; }
+.header-detalle { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; } /* Añadimos margin-bottom */
+.btn-primary { background-color: #3751FF; color: white; padding: 0.5rem 1rem; border-radius: 8px; text-decoration: none; }
+.header-detalle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.btn-primary {
+  background-color: #3751FF;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: bold;
+  white-space: nowrap; /* Evita que el texto del botón se parta */
+}
 </style>
