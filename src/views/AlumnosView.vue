@@ -13,7 +13,7 @@
         </option>
       </select>
       <input v-model="nuevoAlumno.carrera" placeholder="Carrera" />
-      <input type="number" v-model.number="nuevoAlumno.porcentaje_beca" placeholder="Beca % (ej: 10.5)" max="100" />
+       <input type="number" v-model.number="nuevoAlumno.porcentaje_beca" placeholder="Beca % (ej: 10.5)" max="100" />
       <button type="submit" class="full-width">Crear Alumno</button>
     </form>
 
@@ -64,18 +64,42 @@ const nuevoAlumno = ref({
   estatus: 'Activo',
 });
 
+// Función corregida para cargar alumnos
 const fetchAlumnos = async () => {
   try {
     const response = await apiClient.get('/alumnos');
     alumnos.value = response.data;
   } catch (error) {
     toast.error("Error al cargar la lista de alumnos.");
+    console.error("Error en fetchAlumnos:", error);
   }
 };
 
-const fetchListasDePrecios = async () => { /* ... se mantiene igual ... */ };
+// Función corregida para cargar listas de precios
+const fetchListasDePrecios = async () => {
+  try {
+    const response = await apiClient.get('/listas-precios');
+    listasDePrecios.value = response.data;
+  } catch (error) {
+    toast.error("Error al cargar los planes de pago.");
+    console.error("Error en fetchListasDePrecios:", error);
+  }
+};
 
-const crearNuevoAlumno = async () => { /* ... se mantiene igual ... */ };
+const crearNuevoAlumno = async () => {
+    try {
+        await apiClient.post('/alumnos', nuevoAlumno.value);
+        toast.success("Alumno creado exitosamente.");
+        await fetchAlumnos();
+        Object.keys(nuevoAlumno.value).forEach(key => { nuevoAlumno.value[key] = '' });
+        nuevoAlumno.value.porcentaje_beca = 0;
+        nuevoAlumno.value.estatus = 'Activo';
+    } catch (error) {
+        const errorMessage = error.response?.data?.error || 'Ocurrió un error desconocido.';
+        toast.error(`Error al crear alumno: ${errorMessage}`);
+        console.error("Error al crear alumno:", error.response?.data);
+    }
+};
 
 const abrirModalConfirmacion = (id) => {
   alumnoAEliminar.value = id;
@@ -99,15 +123,24 @@ const eliminarAlumno = async () => {
   }
 };
 
+// onMounted corregido para manejar la carga de forma segura
 onMounted(async () => {
   cargando.value = true;
-  await Promise.all([fetchAlumnos(), fetchListasDePrecios()]);
-  cargando.value = false;
+  try {
+    // Esperamos a que ambas peticiones terminen
+    await Promise.all([
+      fetchAlumnos(),
+      fetchListasDePrecios()
+    ]);
+  } catch (error) {
+    toast.error("No se pudo cargar la información inicial de la página.");
+  } finally {
+    cargando.value = false;
+  }
 });
 </script>
 
 <style scoped>
-/* ... (los estilos se mantienen igual) ... */
 .alumnos-view { max-width: 800px; margin: 0 auto; }
 .form-container { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2rem; padding: 1rem; background-color: #f9f9f9; border-radius: 8px; }
 .form-container h3, .form-container button { grid-column: 1 / -1; }
