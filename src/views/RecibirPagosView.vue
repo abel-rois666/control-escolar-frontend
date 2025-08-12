@@ -1,8 +1,10 @@
 <template>
   <div class="recibir-pagos-view">
-    <h1>Recibir Pagos</h1>
-    <p>Busca un alumno por nombre o matrícula para ver sus detalles y registrar un pago.</p>
-
+    <div class="header">
+      <h1>Consulta de Alumnos</h1>
+      <RouterLink to="/alumnos" class="btn-secondary">← Volver</RouterLink>
+    </div>
+    <p>Busca un alumno por nombre o matrícula para ver su ficha y estado de cuenta.</p>
     <div class="search-container">
       <input 
         type="text" 
@@ -12,11 +14,7 @@
       />
     </div>
 
-     <SpinnerLoader v-if="cargando" />
-
-    <div v-if="cargando" class="loading-message">
-      Buscando...
-    </div>
+    <SpinnerLoader v-if="cargando" />
 
     <ul v-else-if="resultados.length > 0" class="lista-container">
       <li v-for="alumno in resultados" :key="alumno.id">
@@ -44,8 +42,6 @@ const terminoBusqueda = ref('');
 const resultados = ref([]);
 const cargando = ref(false);
 
-// 'watch' es una función de Vue que "observa" una variable.
-// Cada vez que 'terminoBusqueda' cambia, este código se ejecuta.
 watch(terminoBusqueda, async (nuevoValor) => {
   if (nuevoValor.length < 2) {
     resultados.value = [];
@@ -54,7 +50,6 @@ watch(terminoBusqueda, async (nuevoValor) => {
 
   cargando.value = true;
   try {
-    // Hacemos la petición a la API con el término de búsqueda
     const response = await apiClient.get('/alumnos', {
       params: {
         buscar: nuevoValor
@@ -76,10 +71,27 @@ watch(terminoBusqueda, async (nuevoValor) => {
   max-width: 800px;
   margin: 0 auto;
 }
+/* ==== ESTILOS AÑADIDOS ==== */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+.btn-secondary {
+  background-color: #6c757d;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  text-decoration: none;
+}
+/* ==== FIN DE ESTILOS AÑADIDOS ==== */
+
 .search-input {
   width: 100%;
   padding: 0.75rem;
   font-size: 1.1rem;
+  margin-top: 1.5rem;
   margin-bottom: 1.5rem;
 }
 .lista-container {
@@ -99,10 +111,5 @@ watch(terminoBusqueda, async (nuevoValor) => {
 }
 .lista-container li a:hover {
   background-color: #f9f9f9;
-}
-.loading-message {
-  padding: 1rem;
-  text-align: center;
-  color: #555;
 }
 </style>
