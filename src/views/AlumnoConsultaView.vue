@@ -1,15 +1,15 @@
 <template>
-  <div class="recibir-pagos-view">
+  <div class="consulta-view">
     <div class="header">
-      <h1>Consulta para Recibir Pagos</h1>
+      <h1>Consulta de Alumnos</h1>
       <RouterLink to="/alumnos" class="btn-secondary">← Volver</RouterLink>
     </div>
-    <p>Busca un alumno por nombre o matrícula para registrar un nuevo pago.</p>
+    <p>Busca un alumno por nombre o matrícula para ver su ficha y estado de cuenta.</p>
     <div class="search-container">
       <input 
         type="text" 
         v-model="terminoBusqueda" 
-        placeholder="Buscar alumno para cobrarle..."
+        placeholder="Buscar alumno para ver su ficha..."
         class="search-input"
       />
     </div>
@@ -18,7 +18,7 @@
 
     <ul v-else-if="resultados.length > 0" class="lista-container">
       <li v-for="alumno in resultados" :key="alumno.id">
-        <RouterLink :to="`/alumnos/${alumno.id}/recibir-pago`">
+        <RouterLink :to="`/alumnos/${alumno.id}`">
           <strong>{{ alumno.nombre_completo }}</strong> - Matrícula: {{ alumno.matricula }}
         </RouterLink>
       </li>
@@ -51,13 +51,10 @@ watch(terminoBusqueda, async (nuevoValor) => {
   cargando.value = true;
   try {
     const response = await apiClient.get('/alumnos', {
-      params: {
-        buscar: nuevoValor
-      }
+      params: { buscar: nuevoValor }
     });
     resultados.value = response.data;
   } catch (error) {
-    console.error('Error al buscar alumnos:', error);
     toast.error("Ocurrió un error al realizar la búsqueda."); 
     resultados.value = [];
   } finally {
@@ -67,46 +64,11 @@ watch(terminoBusqueda, async (nuevoValor) => {
 </script>
 
 <style scoped>
-.recibir-pagos-view {
-  max-width: 800px;
-  margin: 0 auto;
-}
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.5rem;
-}
-.btn-secondary {
-  background-color: #6c757d;
-  color: white;
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
-  text-decoration: none;
-}
-.search-input {
-  width: 100%;
-  padding: 0.75rem;
-  font-size: 1.1rem;
-  margin-top: 1.5rem;
-  margin-bottom: 1.5rem;
-}
-.lista-container {
-  list-style: none;
-  padding: 0;
-}
-.lista-container li a {
-  display: block;
-  background: #fff;
-  border: 1px solid #ddd;
-  padding: 1rem;
-  margin-bottom: 0.5rem;
-  border-radius: 4px;
-  text-decoration: none;
-  color: #2c3e50;
-  transition: background-color 0.2s;
-}
-.lista-container li a:hover {
-  background-color: #f9f9f9;
-}
+.consulta-view { max-width: 800px; margin: 0 auto; }
+.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+.btn-secondary { background-color: #6c757d; color: white; padding: 0.5rem 1rem; border-radius: 8px; text-decoration: none; }
+.search-input { width: 100%; padding: 0.75rem; font-size: 1.1rem; margin-top: 1.5rem; margin-bottom: 1.5rem; }
+.lista-container { list-style: none; padding: 0; }
+.lista-container li a { display: block; background: #fff; border: 1px solid #ddd; padding: 1rem; margin-bottom: 0.5rem; border-radius: 4px; text-decoration: none; color: #2c3e50; transition: background-color 0.2s; }
+.lista-container li a:hover { background-color: #f9f9f9; }
 </style>
