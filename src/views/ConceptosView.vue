@@ -34,7 +34,8 @@
           <td>{{ concepto.id }}</td>
           <td>{{ concepto.nombre_concepto }}</td>
           <td>{{ concepto.aplica_beca ? 'Sí' : 'No' }}</td>
-          <td>
+          <td class="acciones">
+            <RouterLink :to="`/config/conceptos/${concepto.id}/editar`" class="btn-edit">Editar</RouterLink>
             <button class="btn-delete" @click="abrirModalConfirmacion(concepto.id)">Borrar</button>
           </td>
         </tr>
@@ -58,6 +59,7 @@ import { useToast } from 'vue-toastification';
 import apiClient from '../services/api.js';
 import SpinnerLoader from '../components/SpinnerLoader.vue';
 import ConfirmModal from '../components/ConfirmModal.vue';
+import { RouterLink } from 'vue-router';
 
 const toast = useToast();
 const conceptos = ref([]);
@@ -123,5 +125,7 @@ hr { margin: 2rem 0; }
 table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
 th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
 th { background-color: #f2f2f2; }
+.acciones { display: flex; gap: 0.5rem; }
 .btn-delete { background-color: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
+.btn-edit { background-color: #ffc107; color: black; padding: 5px 10px; border-radius: 4px; text-decoration: none; font-size: 0.875rem; display: inline-flex; align-items: center; }
 </style>

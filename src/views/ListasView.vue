@@ -15,10 +15,11 @@
     <SpinnerLoader v-if="cargando" />
     <ul v-else-if="listas.length > 0" class="lista-container">
       <li v-for="lista in listas" :key="lista.id">
-        <RouterLink :to="`/listas-precios/${lista.id}`">
-          {{ lista.nombre_lista }} (ID: {{ lista.id }})
-        </RouterLink>
-        <button class="btn-delete" @click="abrirModalConfirmacion(lista.id)">Borrar</button>
+        <span>{{ lista.nombre_lista }} (ID: {{ lista.id }})</span>
+        <div class="acciones">
+            <RouterLink :to="`/listas-precios/${lista.id}`" class="btn-edit">Editar</RouterLink>
+            <button class="btn-delete" @click="abrirModalConfirmacion(lista.id)">Borrar</button>
+        </div>
       </li>
     </ul>
     <p v-else>No hay planes de pago registrados.</p>
@@ -103,5 +104,7 @@ input[type="text"] { flex-grow: 1; padding: 0.5rem; }
 hr { margin: 2rem 0; }
 .lista-container { list-style-type: none; padding: 0; }
 .lista-container li { display: flex; justify-content: space-between; align-items: center; background-color: #fff; border: 1px solid #ddd; padding: 1rem; margin-bottom: 0.5rem; border-radius: 4px; }
+.acciones { display: flex; gap: 0.5rem; align-items: center; }
 .btn-delete { background-color: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
+.btn-edit { background-color: #ffc107; color: black; padding: 5px 10px; border-radius: 4px; text-decoration: none; font-size: 0.875rem; }
 </style>

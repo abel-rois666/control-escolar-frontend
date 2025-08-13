@@ -7,7 +7,10 @@
           <h2>{{ alumno.nombre_completo }}</h2>
           <p>Matrícula: {{ alumno.matricula }}</p>
         </div>
-            <button @click="imprimirEstadoDeCuenta">Imprimir</button>
+        <div class="header-actions">
+            <RouterLink :to="`/alumnos/${alumno.id}`" class="btn-secondary">← Volver a la Ficha</RouterLink>
+            <button @click="imprimirEstadoDeCuenta" class="btn-primary">Imprimir</button>
+        </div>
       </div>
 
       <table>
@@ -24,8 +27,8 @@
           <tr v-for="(transaccion, index) in historialConSaldo" :key="index">
             <td>{{ formatDate(transaccion.fecha) }}</td>
             <td>{{ transaccion.descripcion }}</td>
-            <td>{{ transaccion.tipo === 'cargo' ? '$' + transaccion.monto : '' }}</td>
-            <td>{{ transaccion.tipo === 'pago' ? '$' + transaccion.monto : '' }}</td>
+            <td>{{ transaccion.tipo === 'cargo' ? '$' + parseFloat(transaccion.monto).toFixed(2) : '' }}</td>
+            <td>{{ transaccion.tipo === 'pago' ? '$' + parseFloat(transaccion.monto).toFixed(2) : '' }}</td>
             <td><strong>${{ transaccion.saldo }}</strong></td>
           </tr>
         </tbody>
@@ -43,7 +46,7 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, RouterLink } from 'vue-router'; // <-- RouterLink importado
 import apiClient from '../services/api.js';
 import SpinnerLoader from '../components/SpinnerLoader.vue';
 
@@ -52,7 +55,6 @@ const alumno = ref(null);
 const historial = ref([]);
 const cargando = ref(true);
 
-// Calcula el historial añadiendo un saldo corriente
 const historialConSaldo = computed(() => {
   let saldoAcumulado = 0;
   return historial.value.map(t => {
@@ -86,7 +88,13 @@ onMounted(async () => {
   }
 });
 
-const formatDate = (dateString) => { /* ... (función de formateo de fecha) ... */ };
+const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-ES', {
+        year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC'
+    });
+};
 
 const imprimirEstadoDeCuenta = () => {
   window.print();
@@ -94,20 +102,30 @@ const imprimirEstadoDeCuenta = () => {
 
 </script>
 
-
-
 <style scoped>
-/* Estilos para que se vea bien y sea imprimible */
 .estado-cuenta-view { max-width: 800px; margin: auto; background: #fff; padding: 2rem; }
 .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem; }
+.header-actions { display: flex; gap: 1rem; align-items: center; }
 table { width: 100%; border-collapse: collapse; }
 th, td { border: 1px solid #ddd; padding: 8px; }
 th { background-color: #f2f2f2; }
 tfoot { font-weight: bold; background-color: #f2f2f2; }
+.btn-primary, .btn-secondary {
+    padding: 0.6rem 1.2rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    text-decoration: none;
+    display: inline-block;
+}
+.btn-primary { background-color: #3751FF; color: white; }
+.btn-secondary { background-color: #6c757d; color: white; }
+
 @media print {
   body * { visibility: hidden; }
   .estado-cuenta-view, .estado-cuenta-view * { visibility: visible; }
-  .estado-cuenta-view { position: absolute; left: 0; top: 0; width: 100%; }
-  button { display: none; }
+  .estado-cuenta-view { position: absolute; left: 0; top: 0; width: 100%; box-shadow: none; border: none;}
+  .header-actions { display: none; }
 }
 </style>

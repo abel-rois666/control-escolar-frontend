@@ -8,10 +8,13 @@
         <h2>{{ alumno.nombre_completo }}</h2>
       </div>
       <div class="header-actions">
+          <RouterLink :to="`/alumnos/${alumno.id}/generar-cargos`" class="btn-primary">
+            Generar Cargos del Ciclo
+          </RouterLink>
           <RouterLink :to="`/alumnos/${alumno.id}/recibir-pago`" class="btn-success">
             Recibir Pago
           </RouterLink>
-          <RouterLink :to="`/alumnos/${alumno.id}/estado-de-cuenta`" class="btn-primary">
+          <RouterLink :to="`/alumnos/${alumno.id}/estado-de-cuenta`" class="btn-secondary">
             Estado de Cuenta
           </RouterLink>
       </div>
@@ -141,8 +144,9 @@ onMounted(async () => {
 .header-detalle { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
 .header-detalle h1, .header-detalle h2 { margin: 0; }
 .header-actions { display: flex; gap: 1rem; }
-.btn-primary { background-color: #3751FF; color: white; padding: 0.75rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: bold; white-space: nowrap; }
-.btn-success { background-color: #28a745; color: white; padding: 0.75rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: bold; white-space: nowrap; }
+.btn-primary, .btn-success, .btn-secondary { background-color: #3751FF; color: white; padding: 0.75rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: bold; white-space: nowrap; }
+.btn-success { background-color: #28a745; }
+.btn-secondary { background-color: #6c757d; }
 .card { background-color: #fff; border: 1px solid #DFE0EB; border-radius: 8px; padding: 1.5rem; margin-bottom: 2rem; }
 .info-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
 table { width: 100%; border-collapse: collapse; margin-top: 1rem; }

@@ -8,7 +8,7 @@
       </div>
 
       <div class="card">
-        <form @submit.prevent="actualizarAlumno" class="form-crear-alumno">
+        <form @submit.prevent="actualizarAlumno" class="form-editar-alumno">
           <div class="form-group">
             <label>Apellido Paterno*</label>
             <input v-model="alumno.apellido_paterno" required />
@@ -21,6 +21,7 @@
             <label>Nombre(s)*</label>
             <input v-model="alumno.nombre" required />
           </div>
+
           <div class="form-group">
             <label>Matrícula*</label>
             <input v-model="alumno.matricula" required />
@@ -37,7 +38,47 @@
               <option v-for="lista in listasDePrecios" :key="lista.id" :value="lista.id">{{ lista.nombre_lista }}</option>
             </select>
           </div>
-          <div class="form-actions">
+          
+          <div class="form-group">
+            <label>Grado</label>
+            <input v-model="alumno.grado" />
+          </div>
+          <div class="form-group">
+            <label>Grupo</label>
+            <input v-model="alumno.grupo" />
+          </div>
+          <div class="form-group">
+            <label>Turno</label>
+            <input v-model="alumno.turno" />
+          </div>
+
+          <div class="form-group">
+            <label>Email de Contacto</label>
+            <input type="email" v-model="alumno.email_contacto" />
+          </div>
+          <div class="form-group">
+            <label>Teléfono Celular</label>
+            <input v-model="alumno.telefono_celular" />
+          </div>
+          <div class="form-group">
+            <label>Nombre del Tutor</label>
+            <input v-model="alumno.nombre_tutor" />
+          </div>
+
+          <div class="form-group">
+            <label>Beca (%)</label>
+            <input type="number" v-model.number="alumno.porcentaje_beca" max="100" />
+          </div>
+          <div class="form-group">
+            <label>Estatus</label>
+            <select v-model="alumno.estatus" required>
+              <option>Activo</option>
+              <option>Baja</option>
+              <option>Egresado</option>
+            </select>
+          </div>
+
+          <div class="form-actions full-width">
             <button type="submit" class="btn-primary">Guardar Cambios</button>
             <button type="button" class="btn-delete" @click="abrirModalConfirmacion">Eliminar Alumno</button>
           </div>
@@ -68,7 +109,7 @@ const router = useRouter();
 const route = useRoute();
 
 const alumno = ref({});
-const alumnoOriginal = ref({}); // Para guardar una copia del nombre original
+const alumnoOriginal = ref({});
 const listasDePrecios = ref([]);
 const licenciaturas = ref([]);
 const cargando = ref(true);
@@ -84,7 +125,7 @@ onMounted(async () => {
       apiClient.get('/licenciaturas')
     ]);
     alumno.value = alumnoRes.data;
-    alumnoOriginal.value = { ...alumnoRes.data }; // Guardamos una copia
+    alumnoOriginal.value = { ...alumnoRes.data };
     listasDePrecios.value = listasRes.data;
     licenciaturas.value = licRes.data;
   } catch (error) {
@@ -121,7 +162,20 @@ const eliminarAlumno = async () => {
 </script>
 
 <style scoped>
-/* Puedes usar estilos similares a AlumnoCrearView y añadir esto */
+/* Estilos copiados de AlumnoCrearView para consistencia */
+.editar-alumno-view { max-width: 1000px; margin: 0 auto; }
+.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+.card { background-color: #fff; border: 1px solid #DFE0EB; border-radius: 8px; padding: 2rem; position: relative; min-height: 200px; }
+.form-editar-alumno { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
+.form-group { display: flex; flex-direction: column; }
+.form-group label { margin-bottom: 0.5rem; font-size: 0.9rem; font-weight: bold; }
+.form-group input, .form-group select { padding: 0.6rem; border-radius: 6px; border: 1px solid #DFE0EB; width: 100%; }
+.full-width { grid-column: 1 / -1; margin-top: 1rem; }
+.btn-secondary { background-color: #6c757d; color: white; padding: 0.5rem 1rem; border-radius: 8px; text-decoration: none; }
+button { padding: 0.8rem 1.5rem; border: none; border-radius: 8px; cursor: pointer; font-size: 1rem; }
+.btn-primary { background-color: #3751FF; color: white; }
+
+/* Estilos específicos para esta vista */
 .form-actions {
   grid-column: 1 / -1;
   display: flex;

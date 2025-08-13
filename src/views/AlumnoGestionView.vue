@@ -1,6 +1,9 @@
 <template>
   <div class="gestion-view">
     <div class="header">
+      <RouterLink to="/alumnos" class="btn-secondary">
+        ← Volver
+      </RouterLink>
       <h1>Editar o Eliminar Alumno</h1>
       <RouterLink to="/alumnos/crear" class="btn-primary">
         + Crear Nuevo Alumno
@@ -24,7 +27,7 @@
         <span>
           <strong>{{ alumno.nombre_completo }}</strong> - Matrícula: {{ alumno.matricula }}
         </span>
-        <RouterLink :to="`/alumnos/${alumno.id}/editar`" class="btn-secondary">
+        <RouterLink :to="`/alumnos/${alumno.id}/editar`" class="btn-edit">
           Editar
         </RouterLink>
       </li>
@@ -70,10 +73,21 @@ watch(terminoBusqueda, async (nuevoValor) => {
 
 <style scoped>
 .gestion-view { max-width: 800px; margin: 0 auto; }
-.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+.header { 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  margin-bottom: 0.5rem; 
+}
+.header h1 {
+    font-size: 1.5rem;
+    text-align: center;
+    flex-grow: 1;
+}
 .search-input { width: 100%; padding: 0.75rem; font-size: 1.1rem; margin-top: 1.5rem; margin-bottom: 1.5rem; }
 .lista-container { list-style: none; padding: 0; }
 .lista-container li { display: flex; justify-content: space-between; align-items: center; background: #fff; border: 1px solid #ddd; padding: 1rem; margin-bottom: 0.5rem; border-radius: 4px; }
-.btn-primary { background-color: #3751FF; color: white; padding: 0.6rem 1rem; border-radius: 8px; text-decoration: none; font-weight: bold; }
-.btn-secondary { background-color: #6c757d; color: white; padding: 0.5rem 1rem; border-radius: 8px; text-decoration: none; }
+.btn-primary { background-color: #3751FF; color: white; padding: 0.6rem 1rem; border-radius: 8px; text-decoration: none; font-weight: bold; white-space: nowrap; }
+.btn-secondary { background-color: #6c757d; color: white; padding: 0.6rem 1rem; border-radius: 8px; text-decoration: none; }
+.btn-edit { background-color: #ffc107; color: black; padding: 0.5rem 1rem; border-radius: 8px; text-decoration: none; }
 </style>

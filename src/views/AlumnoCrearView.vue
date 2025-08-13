@@ -78,7 +78,7 @@
             <option>Egresado</option>
           </select>
         </div>
-        <button type="submit" class="full-width">Guardar Alumno</button>
+        <button type="submit" class="full-width">Guardar Alumno y Continuar</button>
       </form>
     </div>
   </div>
@@ -108,8 +108,8 @@ const nuevoAlumno = ref({
   grupo: '',
   turno: '',
   email_contacto: '',
-  telefono_celular: '', // <-- Campo añadido
-  nombre_tutor: '',     // <-- Campo añadido
+  telefono_celular: '',
+  nombre_tutor: '',
   porcentaje_beca: 0,
   estatus: 'Activo',
 });
@@ -132,9 +132,15 @@ const fetchRequiredData = async () => {
 
 const crearNuevoAlumno = async () => {
   try {
-    await apiClient.post('/alumnos', nuevoAlumno.value);
-    toast.success("Alumno creado exitosamente.");
-    router.push('/alumnos/gestion'); // Redirige a la página de gestión/búsqueda
+    const response = await apiClient.post('/alumnos', nuevoAlumno.value);
+    const alumnoCreado = response.data;
+    
+    // Redirige a la nueva vista para generar cargos
+    router.push({ 
+        name: 'generar-cargos', 
+        params: { id: alumnoCreado.id } 
+    });
+
   } catch (error) {
     const errorMessage = error.response?.data?.error || 'Error desconocido';
     toast.error(`Error al crear alumno: ${errorMessage}`);
