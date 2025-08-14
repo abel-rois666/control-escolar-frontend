@@ -1,63 +1,36 @@
 <template>
-  <div class="recibo-view">
+  <div class="recibo-page">
     <SpinnerLoader v-if="cargando" />
-    <div v-if="!cargando && recibo" class="recibo-container">
-      <div class="header">
-        <div class="header-info">
-          <h1>Recibo de Pago</h1>
-          <p><strong>Folio:</strong> {{ recibo.folio }}</p>
-          <p><strong>Fecha de Pago:</strong> {{ formatDate(recibo.fecha_pago) }}</p>
+    
+    <div v-if="!cargando && recibo">
+      <div class="screen-only">
+        <div class="recibo-controls">
+            <button @click="imprimirRecibo" class="btn-primary">Imprimir Recibo</button>
+            <RouterLink :to="`/alumnos/${recibo.alumno_id}`" class="btn-secondary">Volver a la Ficha del Alumno</RouterLink>
         </div>
-        <div class="header-logo">
-          <img src="@/assets/06-Logo_CUOM_v3_ConFondoAmpliado.jpg" alt="Logo CUOM" />
+        <div class="hoja-carta-container">
+          <div class="recibo-wrapper">
+            <ReciboTemplate :recibo="recibo" :alumno="alumno" copia="Documento de Muestra" />
+          </div>
         </div>
       </div>
 
-      <div class="card alumno-info">
-        <h3>Información del Alumno</h3>
-        <p><strong>Nombre:</strong> {{ alumno.nombre_completo }}</p>
-        <p><strong>Matrícula:</strong> {{ alumno.matricula }}</p>
-      </div>
-
-      <div class="card pago-detalles">
-        <h3>Detalles del Pago</h3>
-        <p><strong>Monto Total Recibido:</strong> <span class="monto-total">${{ parseFloat(recibo.monto_total_recibido).toFixed(2) }}</span></p>
-        <p><strong>Forma de Pago:</strong> {{ recibo.forma_pago }}</p>
-        <p v-if="recibo.banco"><strong>Banco:</strong> {{ recibo.banco }}</p>
-      </div>
-
-      <div class="card conceptos-pagados">
-        <h3>Conceptos Cubiertos</h3>
-        <table>
-          <thead>
-            <tr>
-              <th>Concepto</th>
-              <th>Monto Aplicado</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="(detalle, index) in recibo.detalles" :key="index">
-              <td>{{ detalle.nombre_concepto }}</td>
-              <td><strong>${{ parseFloat(detalle.monto_aplicado).toFixed(2) }}</strong></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="footer-actions">
-        <button @click="imprimirRecibo" class="btn-primary">Imprimir Recibo</button>
-        <RouterLink :to="`/alumnos/${recibo.alumno_id}`" class="btn-secondary">Volver a la Ficha del Alumno</RouterLink>
+      <div class="print-only">
+        <ReciboTemplate v-for="copia in copias" :key="copia.para" :recibo="recibo" :alumno="alumno" :copia="copia.para"/>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, defineAsyncComponent } from 'vue';
 import { useRoute, RouterLink } from 'vue-router';
 import { useToast } from 'vue-toastification';
 import apiClient from '../services/api.js';
 import SpinnerLoader from '../components/SpinnerLoader.vue';
+
+// Definimos el template del recibo como un componente separado para reutilizarlo
+const ReciboTemplate = defineAsyncComponent(() => import('../components/ReciboTemplate.vue'));
 
 const route = useRoute();
 const toast = useToast();
@@ -65,12 +38,17 @@ const recibo = ref(null);
 const alumno = ref(null);
 const cargando = ref(true);
 
+const copias = ref([
+    { para: 'Copia: Control Escolar' },
+    { para: 'Copia: Coordinación Financiera' },
+    { para: 'Copia: Alumno' }
+]);
+
 onMounted(async () => {
   const reciboId = route.params.id;
   try {
     const reciboRes = await apiClient.get(`/recibos/${reciboId}`);
     recibo.value = reciboRes.data;
-
     if (recibo.value) {
       const alumnoRes = await apiClient.get(`/alumnos/${recibo.value.alumno_id}`);
       alumno.value = alumnoRes.data;
@@ -82,38 +60,92 @@ onMounted(async () => {
   }
 });
 
-const formatDate = (dateString) => {
-  if (!dateString) return 'N/A';
-  const date = new Date(dateString);
-  return date.toLocaleDateString('es-ES', {
-    year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC'
-  });
-};
-
 const imprimirRecibo = () => {
   window.print();
 };
 </script>
 
-<style scoped>
-.recibo-view { max-width: 800px; margin: auto; background: #fff; padding: 2rem; border-radius: 8px; }
-.recibo-container { border: 1px solid #ccc; padding: 1.5rem; }
-.header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #192A4E; padding-bottom: 1rem; margin-bottom: 1.5rem; }
-.header-logo img { max-width: 120px; }
-h1 { color: #192A4E; margin: 0 0 0.5rem 0; }
-.card { border: 1px solid #eee; border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem; }
-.monto-total { font-size: 1.2rem; font-weight: bold; color: #29CC97; }
-table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-th, td { border-bottom: 1px solid #ddd; padding: 8px; text-align: left; }
-th { background-color: #f2f2f2; }
-.footer-actions { margin-top: 2rem; display: flex; justify-content: center; gap: 1rem; }
-.btn-primary { background-color: #3751FF; color: white; padding: 0.75rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: bold; border: none; cursor: pointer; }
-.btn-secondary { background-color: #6c757d; color: white; padding: 0.75rem 1.5rem; border-radius: 8px; text-decoration: none; }
-
+<style>
+/* --- ESTILOS GLOBALES PARA IMPRESIÓN --- */
 @media print {
-  body * { visibility: hidden; }
-  .recibo-view, .recibo-view * { visibility: visible; }
-  .recibo-view { position: absolute; left: 0; top: 0; width: 100%; border: none; box-shadow: none; }
-  .footer-actions { display: none; }
+  /* Oculta las notificaciones de toast al imprimir */
+  .Vue-Toastification__container {
+    display: none !important;
+  }
+
+  @page {
+    size: letter portrait;
+    margin: 0.5in;
+  }
+  
+  body, html {
+    background: #fff;
+  }
+  
+  .print-only {
+    display: block !important;
+    position: relative;
+    width: 100%;
+    height: 100vh;
+  }
+
+  .screen-only {
+    display: none !important;
+  }
+
+  /* Posicionamiento absoluto para forzar el layout */
+  .recibo-template:nth-child(1) {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+  }
+  .recibo-template:nth-child(2) {
+    position: absolute;
+    top: 33.33%;
+    left: 0;
+    width: 100%;
+  }
+  .recibo-template:nth-child(3) {
+    position: absolute;
+    top: 66.66%;
+    left: 0;
+    width: 100%;
+  }
 }
+</style>
+
+<style scoped>
+/* --- ESTILOS PARA LA VISTA EN PANTALLA --- */
+.recibo-page {
+  max-width: 850px;
+  margin: 0 auto;
+}
+.recibo-controls {
+  margin-bottom: 2rem;
+  display: flex;
+  gap: 1rem;
+}
+.hoja-carta-container {
+  background: white;
+  padding: 2rem;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  border-radius: 8px;
+}
+
+/* Por defecto, la sección de impresión está oculta */
+.print-only {
+    display: none;
+}
+
+.btn-primary, .btn-secondary {
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+}
+.btn-primary { background-color: #3751FF; color: white; }
+.btn-secondary { background-color: #6c757d; color: white; }
 </style>

@@ -52,12 +52,22 @@
           <input type="number" step="0.01" v-model.number="nuevoRecibo.monto_total_recibido" required />
         </div>
         <div class="form-group">
-          <label>Fecha del Pago:</label>
+          <label>Fecha del Pago (Comprobante):</label>
           <input type="date" v-model="nuevoRecibo.fecha_pago" required />
         </div>
         <div class="form-group">
           <label>Forma de Pago:</label>
           <input v-model="nuevoRecibo.forma_pago" placeholder="Efectivo, Transferencia..." />
+        </div>
+
+        <div class="form-group full-width">
+            <label>Banco (si aplica):</label>
+            <select v-model="nuevoRecibo.banco">
+                <option value="">N/A</option>
+                <option>BBVA</option>
+                <option>MIFEL</option>
+                <option>Otro</option>
+            </select>
         </div>
 
         <div class="full-width cargos-section">
@@ -91,7 +101,7 @@ const alumno = ref(null);
 const ciclos = ref([]);
 const cicloSeleccionadoId = ref(null);
 const cargos = ref([]);
-const todosLosConceptos = ref([]); // <-- Añadido para el nuevo formulario
+const todosLosConceptos = ref([]);
 const cargando = ref(true);
 
 const nuevoCargo = ref({
@@ -105,6 +115,7 @@ const nuevoRecibo = ref({
   monto_total_recibido: 0,
   fecha_pago: new Date().toISOString().split('T')[0],
   forma_pago: 'Efectivo',
+  banco: '',
   detalles: [],
 });
 const cargosSeleccionados = ref([]);
@@ -141,7 +152,7 @@ onMounted(async () => {
     const [alumnoRes, ciclosRes, conceptosRes] = await Promise.all([
       apiClient.get(`/alumnos/${alumnoId}`),
       apiClient.get('/ciclos-escolares'),
-      apiClient.get('/conceptos') // <-- Se obtiene la lista de todos los conceptos
+      apiClient.get('/conceptos')
     ]);
     alumno.value = alumnoRes.data;
     ciclos.value = ciclosRes.data;
@@ -163,7 +174,6 @@ const crearNuevoCargo = async () => {
   const alumnoId = route.params.id;
   try {
     await apiClient.post(`/alumnos/${alumnoId}/cargos`, nuevoCargo.value);
-    // Recarga los cargos del ciclo actual para que aparezca el nuevo
     await fetchCargosPorCiclo(alumnoId, cicloSeleccionadoId.value);
     toast.success("Cargo generado exitosamente.");
     nuevoCargo.value.concepto_id = '';
@@ -216,6 +226,8 @@ const registrarPago = async () => {
 .form-grid-pago { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
 .form-grid-cargo { display: grid; grid-template-columns: 1fr 1fr auto; gap: 1rem; align-items: end; }
 .form-group { display: flex; flex-direction: column; }
+.form-group label { margin-bottom: 0.5rem; }
+.form-group input, .form-group select { padding: 0.5rem; border-radius: 6px; border: 1px solid #DFE0EB; }
 .full-width { grid-column: 1 / -1; }
 .cargos-section { border-top: 1px solid #eee; margin-top: 1rem; padding-top: 1rem; }
 .cargo-a-pagar { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;}

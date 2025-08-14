@@ -10,6 +10,7 @@
         <RouterLink to="/dashboard">Panel de Control</RouterLink>
         <RouterLink to="/alumnos">Alumnos</RouterLink>
         <RouterLink to="/recibir-pagos">Recibir Pagos</RouterLink>
+        <RouterLink to="/consultar-recibos">Consultar Recibos</RouterLink>
         <RouterLink to="/reportes">Reportes</RouterLink>
 
         <a @click="toggleConfigMenu" class="submenu-toggle">
@@ -51,12 +52,11 @@ const toggleConfigMenu = () => {
   display: flex;
   flex-direction: column;
 }
-/* Estilos para que el header se comporte como un enlace */
 .sidebar-header {
   padding: 1.5rem;
   text-align: center;
   border-bottom: 1px solid #2d3e5e;
-  text-decoration: none; /* Quitamos el subrayado del enlace */
+  text-decoration: none;
 }
 .logo {
     max-width: 80px;
@@ -107,5 +107,18 @@ const toggleConfigMenu = () => {
 .submenu a.router-link-exact-active {
   color: #fff;
   background-color: #0b1529;
+}
+
+/* --- REGLAS DE IMPRESIÓN MEJORADAS --- */
+@media print {
+  .sidebar {
+    display: none !important; /* Ocultar la barra lateral al imprimir */
+  }
+  .main-content {
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    margin: 0;
+  }
 }
 </style>

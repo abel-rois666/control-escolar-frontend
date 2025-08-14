@@ -10,31 +10,29 @@
       <div class="card">
         <h3>Siguiente Paso: Generar Cargos del Ciclo</h3>
         <p>
-          Puedes generar ahora los cargos correspondientes al plan de pago <strong>"{{ plan.nombre_lista }}"</strong> para el ciclo escolar actual.
+          Asigna una fecha de vencimiento a cada concepto del plan de pago <strong>"{{ plan.nombre_lista }}"</strong>.
         </p>
         <p class="subtle">
           Si prefieres, puedes omitir este paso y hacerlo más tarde desde la ficha del alumno.
         </p>
 
-        <div class="form-generar">
-            <div class="form-group">
-                <label>Ciclo Escolar donde se aplicarán los cargos:</label>
-                <select v-model="cicloSeleccionadoId" required>
-                    <option v-for="ciclo in ciclos" :key="ciclo.id" :value="ciclo.id">
-                        {{ ciclo.codigo }} - {{ ciclo.descripcion }}
-                    </option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Fecha de Vencimiento para todos los cargos:</label>
-                <input type="date" v-model="fechaVencimiento" required />
-            </div>
+        <div class="form-group-ciclo">
+            <label>Ciclo Escolar donde se aplicarán los cargos:</label>
+            <select v-model="cicloSeleccionadoId" required>
+                <option v-for="ciclo in ciclos" :key="ciclo.id" :value="ciclo.id">
+                    {{ ciclo.codigo }} - {{ ciclo.descripcion }}
+                </option>
+            </select>
         </div>
         
         <h4>Conceptos a generar:</h4>
         <ul class="conceptos-lista">
-            <li v-for="item in plan.items" :key="item.id">
-                {{ item.nombre_concepto }} - <strong>${{ parseFloat(item.monto).toFixed(2) }}</strong>
+            <li v-for="cargo in cargosParaGenerar" :key="cargo.concepto_id">
+                <span>{{ cargo.nombre_concepto }} - <strong>${{ parseFloat(cargo.monto).toFixed(2) }}</strong></span>
+                <div class="form-group-fecha">
+                    <label :for="`fecha-${cargo.concepto_id}`">Fecha de Vencimiento:</label>
+                    <input :id="`fecha-${cargo.concepto_id}`" type="date" v-model="cargo.fecha_vencimiento" required />
+                </div>
             </li>
         </ul>
 
@@ -63,7 +61,7 @@ const alumno = ref(null);
 const plan = ref({ items: [] });
 const ciclos = ref([]);
 const cicloSeleccionadoId = ref(null);
-const fechaVencimiento = ref(new Date().toISOString().split('T')[0]);
+const cargosParaGenerar = ref([]);
 
 onMounted(async () => {
   const alumnoId = route.params.id;
@@ -85,6 +83,12 @@ onMounted(async () => {
     if (alumno.value) {
         const planRes = await apiClient.get(`/listas-precios/${alumno.value.lista_de_precios_id}`);
         plan.value = planRes.data;
+
+        // Preparamos el arreglo con fechas por defecto
+        cargosParaGenerar.value = plan.value.items.map(item => ({
+            ...item,
+            fecha_vencimiento: new Date().toISOString().split('T')[0]
+        }));
     }
 
   } catch (error) {
@@ -95,18 +99,25 @@ onMounted(async () => {
 });
 
 const generarCargos = async () => {
-    if (!fechaVencimiento.value || !cicloSeleccionadoId.value) {
-        toast.warning("Por favor, selecciona un ciclo y una fecha de vencimiento.");
+    if (!cicloSeleccionadoId.value) {
+        toast.warning("Por favor, selecciona un ciclo escolar.");
         return;
     }
+
+    // Filtramos para enviar solo los datos necesarios
+    const payload = cargosParaGenerar.value.map(cargo => ({
+        concepto_id: cargo.concepto_id,
+        fecha_vencimiento: cargo.fecha_vencimiento
+    }));
+    
     cargando.value = true;
     try {
         await apiClient.post(`/alumnos/${alumno.value.id}/generar-cargos`, {
-            fecha_vencimiento: fechaVencimiento.value,
             ciclo_id: cicloSeleccionadoId.value,
+            cargos: payload
         });
         toast.success("Cargos del plan generados exitosamente.");
-        router.push(`/alumnos/${alumno.value.id}`); // Llevamos al usuario a la ficha del alumno
+        router.push(`/alumnos/${alumno.value.id}`);
     } catch (error) {
         toast.error("Error al generar los cargos.");
         cargando.value = false;
@@ -131,12 +142,22 @@ const generarCargos = async () => {
 }
 .card { background-color: #fff; border: 1px solid #DFE0EB; border-radius: 8px; padding: 2rem; text-align: center; }
 .subtle { color: #6c757d; font-size: 0.9rem; }
-.form-generar { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin: 2rem 0; text-align: left; }
-.form-group { display: flex; flex-direction: column; }
-.form-group label { margin-bottom: 0.5rem; font-weight: bold; }
-.form-group input, .form-group select { padding: 0.6rem; border-radius: 6px; border: 1px solid #DFE0EB; }
-.conceptos-lista { list-style: none; padding: 0; margin: 1rem 0 2rem 0; }
-.conceptos-lista li { background-color: #f8f9fa; padding: 0.5rem; border-radius: 4px; margin-bottom: 0.5rem; }
+.form-group-ciclo { text-align: left; margin-bottom: 2rem; }
+.form-group-ciclo label { font-weight: bold; margin-bottom: 0.5rem; display: block; }
+.form-group-ciclo select { width: 100%; padding: 0.6rem; border-radius: 6px; border: 1px solid #DFE0EB; }
+.conceptos-lista { list-style: none; padding: 0; margin: 1rem 0 2rem 0; text-align: left; }
+.conceptos-lista li { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    background-color: #f8f9fa; 
+    padding: 0.75rem; 
+    border-radius: 4px; 
+    margin-bottom: 0.75rem; 
+}
+.form-group-fecha { display: flex; align-items: center; gap: 0.5rem; }
+.form-group-fecha label { font-size: 0.9rem; }
+.form-group-fecha input { padding: 0.4rem; border-radius: 6px; border: 1px solid #DFE0EB; }
 .form-actions { display: flex; justify-content: center; gap: 1rem; }
 .btn-primary { background-color: #3751FF; color: white; }
 .btn-secondary { background-color: #6c757d; color: white; text-decoration: none; }

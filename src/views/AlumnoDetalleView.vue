@@ -14,6 +14,9 @@
           <RouterLink :to="`/alumnos/${alumno.id}/recibir-pago`" class="btn-success">
             Recibir Pago
           </RouterLink>
+          <RouterLink :to="`/alumnos/${alumno.id}/historial-recibos`" class="btn-info">
+            Historial de Recibos
+          </RouterLink>
           <RouterLink :to="`/alumnos/${alumno.id}/estado-de-cuenta`" class="btn-secondary">
             Estado de Cuenta
           </RouterLink>
@@ -140,12 +143,14 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.alumno-detalle-view { max-width: 900px; margin: 0 auto; }
+.alumno-detalle-view { max-width: 1100px; margin: 0 auto; }
 .header-detalle { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
 .header-detalle h1, .header-detalle h2 { margin: 0; }
 .header-actions { display: flex; gap: 1rem; }
-.btn-primary, .btn-success, .btn-secondary { background-color: #3751FF; color: white; padding: 0.75rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: bold; white-space: nowrap; }
+.btn-primary, .btn-success, .btn-secondary, .btn-info { padding: 0.75rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: bold; white-space: nowrap; color: white; }
+.btn-primary { background-color: #3751FF; }
 .btn-success { background-color: #28a745; }
+.btn-info { background-color: #17a2b8; }
 .btn-secondary { background-color: #6c757d; }
 .card { background-color: #fff; border: 1px solid #DFE0EB; border-radius: 8px; padding: 1.5rem; margin-bottom: 2rem; }
 .info-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
