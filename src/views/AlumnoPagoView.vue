@@ -42,7 +42,7 @@
 
     <div class="card">
       <h3>Registrar Pago</h3>
-      <form @submit.prevent="registrarPago" class="form-grid-pago">
+      <form @submit.prevent="validarPago" class="form-grid-pago">
         <div class="form-group">
           <label>Folio del Recibo:</label>
           <input v-model="nuevoRecibo.folio" placeholder="Ej: REC-002" required />
@@ -70,7 +70,7 @@
             </select>
         </div>
 
-        <div class="full-width cargos-section">
+        <div class="full-width cargos-section" ref="cargosSectionRef">
             <h4>Aplicar pago a los siguientes cargos del ciclo actual:</h4>
              <p v-if="cargosPendientes.length === 0">No hay cargos pendientes en este ciclo.</p>
             <div v-for="cargo in cargosPendientes" :key="cargo.id" class="cargo-a-pagar">
@@ -85,6 +85,17 @@
       </form>
     </div>
   </div>
+
+  <ActionModal
+        :show="mostrarModalSobrante"
+        title="Monto Excedente Detectado"
+        :message="mensajeSobrante"
+        primaryText="Aplicar a otros cargos"
+        secondaryText="Corregir monto"
+        @primaryAction="handleAplicarSobrante"
+        @secondaryAction="closeModal"
+        @close="closeModal"
+    />
 </template>
 
 <script setup>
@@ -93,6 +104,7 @@ import { useRoute, useRouter, RouterLink } from 'vue-router';
 import { useToast } from 'vue-toastification';
 import apiClient from '../services/api.js';
 import SpinnerLoader from '../components/SpinnerLoader.vue';
+import ActionModal from '../components/ActionModal.vue'; // <-- IMPORTAMOS EL NUEVO MODAL
 
 const toast = useToast();
 const route = useRoute();
@@ -103,12 +115,9 @@ const cicloSeleccionadoId = ref(null);
 const cargos = ref([]);
 const todosLosConceptos = ref([]);
 const cargando = ref(true);
+const cargosSectionRef = ref(null);
 
-const nuevoCargo = ref({
-  concepto_id: '',
-  fecha_vencimiento: '',
-});
-
+const nuevoCargo = ref({ concepto_id: '', fecha_vencimiento: '' });
 const nuevoRecibo = ref({
   folio: '',
   alumno_id: null,
@@ -119,6 +128,9 @@ const nuevoRecibo = ref({
   detalles: [],
 });
 const cargosSeleccionados = ref([]);
+
+const mostrarModalSobrante = ref(false);
+const mensajeSobrante = ref('');
 
 const cargosPendientes = computed(() => {
   return cargos.value.filter(c => parseFloat(c.saldo_pendiente) > 0);
@@ -184,6 +196,28 @@ const crearNuevoCargo = async () => {
   }
 };
 
+const validarPago = () => {
+  if (cargosSeleccionados.value.length === 0) {
+    toast.warning("Por favor, selecciona al menos un cargo para aplicar el pago.");
+    return;
+  }
+
+  const deudaSeleccionada = cargosSeleccionados.value.reduce((total, cargoId) => {
+    const cargo = cargos.value.find(c => c.id === cargoId);
+    return total + (cargo ? parseFloat(cargo.saldo_pendiente) : 0);
+  }, 0);
+
+  const montoRecibido = nuevoRecibo.value.monto_total_recibido;
+  const sobrante = montoRecibido - deudaSeleccionada;
+
+  if (sobrante > 0) {
+    mensajeSobrante.value = `El monto recibido (<b>$${montoRecibido.toFixed(2)}</b>) es mayor que la deuda seleccionada (<b>$${deudaSeleccionada.toFixed(2)}</b>).<br/>Hay un sobrante de <b>$${sobrante.toFixed(2)}</b>.`;
+    mostrarModalSobrante.value = true;
+  } else {
+    registrarPago();
+  }
+};
+
 const registrarPago = async () => {
   nuevoRecibo.value.alumno_id = alumno.value.id;
   let montoRestante = nuevoRecibo.value.monto_total_recibido;
@@ -193,20 +227,22 @@ const registrarPago = async () => {
     if (montoRestante <= 0) break;
     const cargo = cargos.value.find(c => c.id === cargoId);
     if (cargo) {
-        const saldo = parseFloat(cargo.saldo_pendiente);
-        const montoAAplicar = Math.min(montoRestante, saldo);
-        detalles.push({ cargo_id: cargoId, monto_aplicado: montoAAplicar });
-        montoRestante -= montoAAplicar;
+      const saldo = parseFloat(cargo.saldo_pendiente);
+      const montoAAplicar = Math.min(montoRestante, saldo);
+      detalles.push({ cargo_id: cargoId, monto_aplicado: montoAAplicar });
+      montoRestante -= montoAAplicar;
     }
   }
 
   if (detalles.length === 0) {
-    toast.warning("Por favor, selecciona al menos un cargo para aplicar el pago.");
-    return;
+      toast.warning("No se ha seleccionado ningún cargo para aplicar el pago.");
+      return;
   }
+
   nuevoRecibo.value.detalles = detalles;
 
   try {
+    cargando.value = true;
     const response = await apiClient.post('/recibos', nuevoRecibo.value);
     toast.success('¡Pago registrado exitosamente! Redirigiendo al recibo...');
     const reciboCreado = response.data.recibo;
@@ -214,8 +250,21 @@ const registrarPago = async () => {
   } catch (error) {
     const errorMessage = error.response?.data?.error || 'Error desconocido';
     toast.error(`Error al registrar el pago: ${errorMessage}`);
+  } finally {
+    cargando.value = false;
   }
 };
+
+const closeModal = () => {
+    mostrarModalSobrante.value = false;
+};
+
+const handleAplicarSobrante = () => {
+    closeModal();
+    toast.info("Selecciona cargos adicionales para aplicar el sobrante.");
+    cargosSectionRef.value?.scrollIntoView({ behavior: 'smooth' });
+};
+
 </script>
 
 <style scoped>

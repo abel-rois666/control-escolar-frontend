@@ -46,7 +46,14 @@
                             <tbody>
                                 <tr v-for="detalle in recibo.detalles" :key="detalle.nombre_concepto">
                                     <td>1</td>
-                                    <td>{{ detalle.nombre_concepto }}</td>
+                                    <td>
+                                        <span v-if="parseFloat(detalle.monto_aplicado) < parseFloat(detalle.monto_total_cargo)">
+                                            Abono a: {{ detalle.nombre_concepto }}
+                                        </span>
+                                        <span v-else>
+                                            {{ detalle.nombre_concepto }}
+                                        </span>
+                                    </td>
                                     <td>{{ recibo.forma_pago }}</td>
                                     <td>{{ recibo.banco || 'N/A' }}</td>
                                     <td>${{ parseFloat(detalle.monto_aplicado).toFixed(2) }}</td>
@@ -71,7 +78,7 @@
                     <td class="label total-label">TOTAL:</td>
                     <td colspan="2" class="total-amount">${{ parseFloat(recibo.monto_total_recibido).toFixed(2) }}</td>
                 </tr>
-                <tr>
+                 <tr>
                     <td colspan="6" class="disclaimer">
                         RECIBO SIN VALOR FISCAL, ÚNICAMENTE PARA CONTROL ESCOLAR
                     </td>
@@ -106,17 +113,17 @@ const formatDate = (dateString) => {
 .recibo-template {
     border: 1px solid #000;
     font-family: Arial, Helvetica, sans-serif;
-    page-break-inside: avoid; /* Muy importante para la impresión */
+    page-break-inside: avoid;
     line-height: 1.2;
 }
 .main-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 7.5pt; /* Reducimos la fuente base */
+    font-size: 7.5pt;
 }
 .main-table td {
     border: 1px solid #000;
-    padding: 2px 4px; /* Reducimos el padding */
+    padding: 2px 4px;
     vertical-align: top;
 }
 .header-cell {
@@ -129,7 +136,7 @@ const formatDate = (dateString) => {
     vertical-align: middle;
 }
 .logo {
-    height: 30px; /* Reducimos el logo */
+    height: 30px;
     float: left;
     margin-right: 10px;
 }
@@ -155,7 +162,7 @@ const formatDate = (dateString) => {
     background-color: #f2f2f2;
 }
 .footer-row {
-    height: 45px; /* Reducimos la altura de la fila del pie */
+    height: 45px;
 }
 .firma-cell {
     text-align: center;
