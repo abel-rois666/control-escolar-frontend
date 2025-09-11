@@ -31,7 +31,8 @@ import ListaDetalleView from './views/ListaDetalleView.vue'
 import EstadoCuentaView from './views/EstadoCuentaView.vue';
 import CiclosView from './views/CiclosView.vue';
 import LicenciaturasView from './views/LicenciaturasView.vue';
-import HistorialRecibosView from './views/HistorialRecibosView.vue'; // <-- VISTA NUEVA
+import HistorialRecibosView from './views/HistorialRecibosView.vue';
+import GenerarCertificadosView from './views/GenerarCertificadosView.vue'; // <-- **AÑADIDO**
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -52,7 +53,7 @@ const router = createRouter({
         { path: 'alumnos/:id', name: 'alumno-detalle', component: AlumnoDetalleView },
         { path: 'alumnos/:id/recibir-pago', name: 'alumno-pago', component: AlumnoPagoView },
         { path: 'alumnos/:id/estado-de-cuenta', name: 'estado-cuenta', component: EstadoCuentaView },
-        { path: 'alumnos/:id/historial-recibos', name: 'historial-recibos', component: HistorialRecibosView }, // <-- RUTA NUEVA
+        { path: 'alumnos/:id/historial-recibos', name: 'historial-recibos', component: HistorialRecibosView },
       
         { path: 'config/ciclos', name: 'config-ciclos', component: CiclosView },
         { path: 'config/licenciaturas', name: 'config-licenciaturas', component: LicenciaturasView },
@@ -65,6 +66,7 @@ const router = createRouter({
         { path: 'consultar-recibos', name: 'consultar-recibos', component: ConsultaRecibosView },
         { path: 'recibos/:id', name: 'recibo-detalle', component: ReciboView },
         { path: 'reportes', name: 'reportes', component: ReportesView },
+        { path: 'reportes/generar-certificados', name: 'generar-certificados', component: GenerarCertificadosView } // <-- **AÑADIDO**
       ]
     }
   ]
