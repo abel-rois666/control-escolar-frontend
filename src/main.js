@@ -33,6 +33,7 @@ import CiclosView from './views/CiclosView.vue';
 import LicenciaturasView from './views/LicenciaturasView.vue';
 import HistorialRecibosView from './views/HistorialRecibosView.vue';
 import GenerarCertificadosView from './views/GenerarCertificadosView.vue'; // <-- **AÑADIDO**
+import GenerarXmlView from './views/GenerarXmlView.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -66,7 +67,8 @@ const router = createRouter({
         { path: 'consultar-recibos', name: 'consultar-recibos', component: ConsultaRecibosView },
         { path: 'recibos/:id', name: 'recibo-detalle', component: ReciboView },
         { path: 'reportes', name: 'reportes', component: ReportesView },
-        { path: 'reportes/generar-certificados', name: 'generar-certificados', component: GenerarCertificadosView } // <-- **AÑADIDO**
+        { path: 'reportes/generar-certificados', name: 'generar-certificados', component: GenerarCertificadosView }, // <-- **AÑADIDO**
+        { path: 'herramientas/generar-xml', name: 'generar-xml', component: GenerarXmlView }
       ]
     }
   ]

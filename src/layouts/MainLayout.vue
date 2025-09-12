@@ -12,7 +12,8 @@
         <RouterLink to="/recibir-pagos">Recibir Pagos</RouterLink>
         <RouterLink to="/consultar-recibos">Consultar Recibos</RouterLink>
         <RouterLink to="/reportes">Reportes</RouterLink>
-        <RouterLink to="/reportes/generar-certificados">Generar Certificados</RouterLink> <a @click="toggleConfigMenu" class="submenu-toggle">
+        <RouterLink to="/reportes/generar-certificados">Generar Certificados</RouterLink>
+        <RouterLink to="/herramientas/generar-xml">Generar XML desde Excel</RouterLink> <a @click="toggleConfigMenu" class="submenu-toggle">
           Configuración
           <span class="arrow" :class="{ 'open': isConfigOpen }">▶</span>
         </a>
