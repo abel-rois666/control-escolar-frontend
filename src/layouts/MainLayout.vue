@@ -8,22 +8,38 @@
 
       <nav class="main-nav">
         <RouterLink to="/dashboard">Panel de Control</RouterLink>
-        <RouterLink to="/alumnos">Alumnos</RouterLink>
-        <RouterLink to="/recibir-pagos">Recibir Pagos</RouterLink>
-        <RouterLink to="/consultar-recibos">Consultar Recibos</RouterLink>
-        <RouterLink to="/reportes">Reportes</RouterLink>
-        <RouterLink to="/reportes/generar-certificados">Generar Certificados</RouterLink>
-        <RouterLink to="/herramientas/generar-xml">Generar XML desde Excel</RouterLink> <a @click="toggleConfigMenu" class="submenu-toggle">
+        
+        <RouterLink v-if="authStore.hasPermission('alumnos_ver')" to="/alumnos">Alumnos</RouterLink>
+        <RouterLink v-if="authStore.hasPermission('pagos_recibir')" to="/recibir-pagos">Recibir Pagos</RouterLink>
+        <RouterLink v-if="authStore.hasPermission('pagos_ver_recibos')" to="/consultar-recibos">Consultar Recibos</RouterLink>
+        <RouterLink v-if="authStore.hasPermission('reportes_ver_adeudos')" to="/reportes">Reportes</RouterLink>
+        <RouterLink v-if="authStore.hasPermission('reportes_generar_certificados')" to="/reportes/generar-certificados">Generar Certificados</RouterLink>
+        
+        <RouterLink v-if="authStore.hasPermission('herramientas_generar_xml')" to="/herramientas/generar-xml">Generar XML desde Excel</RouterLink> 
+        <RouterLink v-if="authStore.hasPermission('alumnos_importar')" to="/alumnos/carga-masiva">Carga Masiva de Alumnos</RouterLink> 
+        
+        <a 
+          v-if="authStore.hasPermission('config_ver_ciclos') || authStore.hasPermission('config_ver_licenciaturas') || authStore.hasPermission('config_ver_conceptos') || authStore.hasPermission('config_ver_planes') || authStore.hasPermission('config_ver_usuarios')"
+          @click="toggleConfigMenu" 
+          class="submenu-toggle"
+        >
           Configuración
           <span class="arrow" :class="{ 'open': isConfigOpen }">▶</span>
         </a>
         <div v-if="isConfigOpen" class="submenu">
-          <RouterLink to="/config/ciclos">Ciclos Escolares</RouterLink>
-          <RouterLink to="/config/licenciaturas">Licenciaturas</RouterLink>
-          <RouterLink to="/conceptos">Conceptos de Cobro</RouterLink>
-          <RouterLink to="/listas-precios">Planes de Pago</RouterLink>
+          <RouterLink v-if="authStore.hasPermission('config_ver_ciclos')" to="/config/ciclos">Ciclos Escolares</RouterLink>
+          <RouterLink v-if="authStore.hasPermission('config_ver_licenciaturas')" to="/config/licenciaturas">Licenciaturas</RouterLink>
+          <RouterLink v-if="authStore.hasPermission('config_ver_conceptos')" to="/conceptos">Conceptos de Cobro</RouterLink>
+          <RouterLink v-if="authStore.hasPermission('config_ver_planes')" to="/listas-precios">Planes de Pago</RouterLink>
+          <RouterLink v-if="authStore.hasPermission('config_ver_usuarios')" to="/config/usuarios">Gestión de Usuarios</RouterLink>
         </div>
-      </nav>
+        </nav>
+
+      <div class="sidebar-footer">
+        <a @click="logout" class="logout-button">
+          Cerrar Sesión ({{ authUser }})
+        </a>
+      </div>
     </aside>
     <main class="main-content">
       <RouterView />
@@ -31,15 +47,32 @@
   </div>
 </template>
 
+// src/layouts/MainLayout.vue
+
 <script setup>
-import { ref } from 'vue';
-import { RouterLink, RouterView } from 'vue-router';
+import { ref, computed } from 'vue';
+import { RouterLink, RouterView, useRouter } from 'vue-router'; 
 import logo from '@/assets/05-Logo_CUOM_v3_ConFondoBlanco.png';
+
+// --- INICIO: Bloque modificado ---
+import { useAuthStore } from '../stores/auth.js'; 
+const authStore = useAuthStore(); 
+const router = useRouter(); // <-- CORRECTO (aquí sí es seguro usarlo)
+// --- FIN: Bloque modificado ---
 
 const isConfigOpen = ref(false);
 
 const toggleConfigMenu = () => {
   isConfigOpen.value = !isConfigOpen.value;
+};
+
+const authUser = computed(() => {
+  return authStore.user ? authStore.user.nombre_completo : 'Admin';
+});
+
+const logout = () => {
+  authStore.logout(); // 1. El Store limpia el estado
+  router.push('/login'); // 2. El Layout redirige
 };
 </script>
 
@@ -121,4 +154,27 @@ const toggleConfigMenu = () => {
     margin: 0;
   }
 }
+
+/* --- INICIO: Estilos añadidos para Cerrar Sesión --- */
+.sidebar-footer {
+  padding: 1rem 24px;
+  border-top: 1px solid #2d3e5e;
+  margin-top: auto; /* Empuja el footer hacia abajo */
+}
+
+.logout-button {
+  display: block;
+  color: #A4A6B3;
+  text-decoration: none;
+  padding: 10px 0;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+  border-radius: 8px;
+}
+.logout-button:hover {
+  color: #DDE2FF;
+  background-color: #2d3e5e;
+}
+/* --- FIN: Estilos añadidos --- */
 </style>
