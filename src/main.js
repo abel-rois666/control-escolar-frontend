@@ -38,6 +38,7 @@ import GenerarCertificadosView from './views/GenerarCertificadosView.vue';
 import GenerarXmlView from './views/GenerarXmlView.vue';
 import GestionUsuariosView from './views/GestionUsuariosView.vue';
 
+
 // NO importes 'useAuthStore' aquí
 // import { useAuthStore } from './stores/auth.js'; 
 
