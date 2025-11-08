@@ -24,29 +24,34 @@
               <label>Nombre(s)*</label>
               <input v-model="alumno.nombre" required />
             </div>
-            <div class="form-group">
+
+            <div class="form-group form-group-curp">
               <label>CURP</label>
-              <input v-model="alumno.curp" />
+              <input v-model="alumno.curp" placeholder="Clic en 'Generar'..." />
+              <button type="button" @click="generarCURP" class="btn-generar">Generar</button>
             </div>
+
             <div class="form-group">
               <label>Fecha de Nacimiento</label>
               <input type="date" v-model="alumno.fecha_nacimiento" />
             </div>
             <div class="form-group">
               <label>Edad</label>
-              <input type="number" v-model.number="alumno.edad" />
+              <input type="number" v-model.number="alumno.edad" readonly disabled />
             </div>
             <div class="form-group">
               <label>Sexo</label>
               <select v-model="alumno.sexo">
                 <option value="">Selecciona...</option>
-                <option>Masculino</option>
-                <option>Femenino</option>
+                <option v-for="g in generos" :key="g.clave" :value="g.nombre">{{ g.nombre }}</option>
               </select>
             </div>
             <div class="form-group">
               <label>Estado Civil</label>
-              <input v-model="alumno.estado_civil" />
+              <select v-model="alumno.estado_civil">
+                <option value="">Selecciona...</option>
+                <option v-for="e in estadosCiviles" :key="e" :value="e">{{ e }}</option>
+              </select>
             </div>
             <div class="form-group">
               <label>Nacionalidad</label>
@@ -58,7 +63,12 @@
             </div>
             <div class="form-group">
               <label>Estado (Nacimiento)</label>
-              <input v-model="alumno.estado_nacimiento" />
+              <select v-model="alumno.estado_nacimiento">
+                <option value="">Selecciona un estado...</option>
+                <option v-for="estado in estadosDeMexico" :key="estado.clave" :value="estado.nombre">
+                  {{ estado.nombre }}
+                </option>
+              </select>
             </div>
           </fieldset>
           
@@ -154,7 +164,12 @@
             </div>
             <div class="form-group">
               <label>Estado (Domicilio)</label>
-              <input v-model="alumno.estado" />
+              <select v-model="alumno.estado">
+                <option value="">Selecciona un estado...</option>
+                <option v-for="estado in estadosDeMexico" :key="estado.clave" :value="estado.nombre">
+                  {{ estado.nombre }}
+                </option>
+              </select>
             </div>
           </fieldset>
 
@@ -170,7 +185,12 @@
             </div>
             <div class="form-group">
               <label>Estado (Procedencia)</label>
-              <input v-model="alumno.estado_escolaridad" />
+              <select v-model="alumno.estado_escolaridad">
+                <option value="">Selecciona un estado...</option>
+                <option v-for="estado in estadosDeMexico" :key="estado.clave" :value="estado.nombre">
+                  {{ estado.nombre }}
+                </option>
+              </select>
             </div>
             <div class="form-group">
               <label>Promedio Anterior</label>
@@ -213,12 +233,13 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { useToast } from 'vue-toastification';
 import apiClient from '../services/api.js';
 import { useRouter, useRoute, RouterLink } from 'vue-router';
 import SpinnerLoader from '../components/SpinnerLoader.vue';
 import ConfirmModal from '../components/ConfirmModal.vue';
+import { generar, getGeneros, getEstados } from 'curp'; 
 
 const toast = useToast();
 const router = useRouter();
@@ -230,6 +251,51 @@ const listasDePrecios = ref([]);
 const licenciaturas = ref([]);
 const cargando = ref(true);
 const mostrarModal = ref(false);
+
+// --- INICIO: Listas de opciones ---
+const estadosCiviles = ref([
+  'Soltero/a', 'Casado/a', 'Divorciado/a', 'Viudo/a', 'En concubinato'
+]);
+
+// Se declaran como constantes, sin ref()
+const estadosDeMexico = getEstados();
+const generos = getGeneros(); 
+// --- FIN: Listas de opciones ---
+
+// --- INICIO: FUNCIÓN PARA GENERAR CURP ---
+const generarCURP = () => {
+  try {
+    if (!alumno.value.nombre || !alumno.value.apellido_paterno || !alumno.value.fecha_nacimiento || !alumno.value.sexo || !alumno.value.estado_nacimiento) {
+      toast.warning('Faltan datos para generar la CURP: Nombre, Apellido Paterno, Fecha Nacimiento, Sexo y Estado de Nacimiento.');
+      return;
+    }
+
+    const estadoNacimiento = estadosDeMexico.find(e => e.nombre === alumno.value.estado_nacimiento);
+    if (!estadoNacimiento) {
+        toast.error("Estado de nacimiento no válido.");
+        return;
+    }
+
+    const persona = {
+      nombre: alumno.value.nombre,
+      apellidoPaterno: alumno.value.apellido_paterno,
+      apellidoMaterno: alumno.value.apellido_materno || '',
+      genero: alumno.value.sexo === 'Masculino' ? 'HOMBRE' : 'MUJER',
+      fechaNacimiento: alumno.value.fecha_nacimiento.replace(/-/g, '/'), // Formato DD/MM/YYYY
+      estado: estadoNacimiento.clave 
+    };
+
+    const curpGenerada = generar(persona);
+    alumno.value.curp = curpGenerada;
+    toast.success("CURP generada exitosamente.");
+
+  } catch (error) {
+    console.error("Error al generar CURP:", error);
+    toast.error(`Error al generar CURP: ${error.message}`);
+  }
+};
+// --- FIN: FUNCIÓN PARA GENERAR CURP ---
+
 
 // Función para formatear fechas para inputs tipo 'date'
 const formatDateForInput = (dateString) => {
@@ -247,7 +313,6 @@ onMounted(async () => {
       apiClient.get('/licenciaturas')
     ]);
     
-    // Formatear fechas antes de asignarlas al ref
     const data = alumnoRes.data;
     data.fecha_nacimiento = formatDateForInput(data.fecha_nacimiento);
     data.fecha_ingreso = formatDateForInput(data.fecha_ingreso);
@@ -255,9 +320,14 @@ onMounted(async () => {
     data.fecha_egreso = formatDateForInput(data.fecha_egreso);
 
     alumno.value = data;
-    alumnoOriginal.value = { ...data }; // Guardamos copia original para el título
+    alumnoOriginal.value = { ...data }; 
     listasDePrecios.value = listasRes.data;
     licenciaturas.value = licRes.data;
+
+    // Calcular edad al cargar
+    if (alumno.value.fecha_nacimiento) {
+        calcularEdad(alumno.value.fecha_nacimiento);
+    }
 
   } catch (error) {
     toast.error("Error al cargar los datos para la edición.");
@@ -268,14 +338,12 @@ onMounted(async () => {
 
 const actualizarAlumno = async () => {
   try {
-    // Preparamos el payload, convirtiendo campos vacíos a null
      const payload = { ...alumno.value };
     for (const key in payload) {
       if (payload[key] === '') {
         payload[key] = null;
       }
     }
-    // Aseguramos que los campos numéricos sean números o null
     payload.edad = payload.edad ? parseInt(payload.edad) : null;
     payload.porcentaje_beca = payload.porcentaje_beca ? parseFloat(payload.porcentaje_beca) : 0;
     payload.promedio_esc_anterior = payload.promedio_esc_anterior ? parseFloat(payload.promedio_esc_anterior) : null;
@@ -303,6 +371,39 @@ const eliminarAlumno = async () => {
     cerrarModalConfirmacion();
   }
 };
+
+// --- INICIO: Cálculo de Edad ---
+const calcularEdad = (fechaNacimiento) => {
+  if (!fechaNacimiento) {
+    alumno.value.edad = null;
+    return;
+  }
+  try {
+    const hoy = new Date();
+    const nacimiento = new Date(fechaNacimiento);
+    if (nacimiento > hoy) {
+        alumno.value.edad = null;
+        return;
+    }
+    
+    let edad = hoy.getFullYear() - nacimiento.getFullYear();
+    const mes = hoy.getMonth() - nacimiento.getMonth();
+    
+    if (mes < 0 || (mes === 0 && hoy.getDate() < nacimiento.getDate())) {
+      edad--;
+    }
+    
+    alumno.value.edad = edad > 0 ? edad : 0;
+  } catch(e) {
+      alumno.value.edad = null;
+  }
+};
+
+// Observa el campo de fecha de nacimiento y llama a la función
+watch(() => alumno.value.fecha_nacimiento, (nuevaFecha) => {
+  calcularEdad(nuevaFecha);
+});
+// --- FIN: Cálculo de Edad ---
 </script>
 
 <style scoped>
@@ -339,8 +440,42 @@ legend {
   border-radius: 6px; 
   border: 1px solid #DFE0EB; 
   width: 100%; 
+  background-color: #fff; 
+  color: #2c3e50; /* <-- CORRECCIÓN: Asegura texto oscuro en el <select> */
 }
+/* CORRECCIÓN: Asegura que las opciones también tengan texto oscuro */
+.form-group select option {
+  background-color: #fff;
+  color: #2c3e50;
+}
+
 .form-group textarea { min-height: 80px; }
+
+.form-group input:disabled {
+  background-color: #f8f9fa;
+  color: #6c757d;
+  cursor: not-allowed;
+}
+
+.form-group-curp {
+  position: relative;
+}
+.form-group-curp input {
+  padding-right: 80px; 
+}
+.btn-generar {
+  position: absolute;
+  right: 5px;
+  top: 30px; 
+  height: calc(1.2rem + 10px); 
+  padding: 0 0.5rem;
+  font-size: 0.75rem;
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
 
 .form-group.wide { grid-column: span 2; }
 .form-group.full { grid-column: span 3; }

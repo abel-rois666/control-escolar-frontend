@@ -37,6 +37,7 @@ import HistorialRecibosView from './views/HistorialRecibosView.vue';
 import GenerarCertificadosView from './views/GenerarCertificadosView.vue';
 import GenerarXmlView from './views/GenerarXmlView.vue';
 import GestionUsuariosView from './views/GestionUsuariosView.vue';
+import UsuarioForm from './views/UsuarioForm.vue'; // <-- AÑADIDO
 
 
 // NO importes 'useAuthStore' aquí
@@ -84,7 +85,12 @@ const router = createRouter({
         { path: 'config/conceptos/:id/editar', name: 'concepto-editar', component: ConceptoEditarView },
         { path: 'listas-precios', name: 'listas-precios', component: ListasView },
         { path: 'listas-precios/:id', name: 'lista-detalle', component: ListaDetalleView },
+        
+        // --- RUTAS DE GESTIÓN DE USUARIOS ---
         { path: 'config/usuarios', name: 'gestion-usuarios', component: GestionUsuariosView },
+        { path: 'config/usuarios/crear', name: 'usuario-crear', component: UsuarioForm }, // <-- AÑADIDO
+        { path: 'config/usuarios/:id/editar', name: 'usuario-editar', component: UsuarioForm }, // <-- AÑADIDO
+
         { path: 'recibir-pagos', name: 'recibir-pagos', component: RecibirPagosView },
         { path: 'consultar-recibos', name: 'consultar-recibos', component: ConsultaRecibosView },
         { path: 'recibos/:id', name: 'recibo-detalle', component: ReciboView },

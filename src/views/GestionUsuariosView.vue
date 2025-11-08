@@ -1,6 +1,15 @@
 <template>
   <div class="gestion-usuarios-view">
-    <h1>Gestión de Usuarios</h1>
+    <div class="header">
+      <h1>Gestión de Usuarios</h1>
+      <RouterLink 
+        to="/config/usuarios/crear" 
+        class="btn-primary" 
+        v-if="authStore.hasPermission('usuarios_crear')"
+      >
+        + Crear Nuevo Usuario
+      </RouterLink>
+    </div>
     <p>Crea, edita y asigna permisos a los usuarios del sistema.</p>
     
     <div class="card">
@@ -17,12 +26,19 @@
           <tr v-for="usuario in usuarios" :key="usuario.id">
             <td>{{ usuario.nombre_completo }}</td>
             <td>{{ usuario.username }}</td>
-            <td>
-              <button class="btn-edit" @click="editarUsuario(usuario.id)">Editar</button>
+            <td class="acciones">
+              <button 
+                class="btn-edit" 
+                @click="editarUsuario(usuario.id)" 
+                v-if="authStore.hasPermission('usuarios_editar')"
+              >
+                Editar
+              </button>
               <button 
                 class="btn-delete" 
                 @click="confirmarEliminacion(usuario.id)" 
                 :disabled="usuario.id === 1 || usuario.id === authStore.user.userId"
+                v-if="authStore.hasPermission('usuarios_eliminar')"
               >
                 Borrar
               </button>
@@ -49,10 +65,10 @@ import apiClient from '../services/api.js';
 import SpinnerLoader from '../components/SpinnerLoader.vue';
 import ConfirmModal from '../components/ConfirmModal.vue';
 import { useAuthStore } from '../stores/auth.js';
-// (Opcional: import { useRouter } from 'vue-router';)
+import { useRouter, RouterLink } from 'vue-router'; // <-- AÑADIDO
 
 const toast = useToast();
-// const router = useRouter(); // (Opcional: para redirigir a la pág. de edición)
+const router = useRouter(); // <-- AÑADIDO
 const authStore = useAuthStore(); // Para deshabilitar el borrado de uno mismo
 
 const usuarios = ref([]);
@@ -75,9 +91,8 @@ const fetchUsuarios = async () => {
 onMounted(fetchUsuarios);
 
 const editarUsuario = (id) => {
-  // (Paso futuro: redirigir al formulario de edición)
-  // router.push(`/config/usuarios/${id}/editar`);
-  toast.info('La edición de usuarios se implementará en el siguiente paso.');
+  // Ahora redirige al formulario de edición
+  router.push(`/config/usuarios/${id}/editar`);
 };
 
 const confirmarEliminacion = (id) => {
@@ -107,10 +122,29 @@ const eliminarUsuario = async () => {
 
 <style scoped>
 .gestion-usuarios-view { max-width: 900px; margin: auto; }
+.header { /* AÑADIDO */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+.btn-primary { /* AÑADIDO */
+  background-color: #3751FF;
+  color: white;
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: bold;
+  white-space: nowrap;
+}
 .card { background-color: #fff; border: 1px solid #DFE0EB; border-radius: 8px; padding: 1.5rem; }
 table { width: 100%; border-collapse: collapse; }
 th, td { border-bottom: 1px solid #ddd; padding: 12px; text-align: left; }
 th { background-color: #f8f9fa; }
+.acciones { /* AÑADIDO */
+  display: flex;
+  gap: 0.5rem;
+}
 button { padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; margin-right: 5px; }
 .btn-edit { background-color: #ffc107; color: black; }
 .btn-delete { background-color: #dc3545; color: white; }

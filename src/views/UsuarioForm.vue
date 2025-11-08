@@ -104,7 +104,8 @@ const usuarioDefault = {
   permissions: {
     // Pon los permisos mínimos que un usuario nuevo debería tener
     "alumnos_ver": true,
-    "pagos_recibir": true
+    "pagos_recibir": true,
+    "reportes_ver_ingresos": true // <-- ¡AQUÍ ESTÁ LA MODIFICACIÓN!
   }
 };
 const usuario = ref(JSON.parse(JSON.stringify(usuarioDefault))); // Copia profunda
